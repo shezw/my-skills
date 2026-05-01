@@ -12,47 +12,12 @@
     @email   : hello@shezw.com
 -->
 
-# Rust Code Standards
+# Rust Standards Moved
 
-这份文档是用户级 Rust 指令的仓库内镜像版本，用于版本化维护和后续迭代。
+Rust 规范已经从 `agent-baseline/references/` 迁移为独立技能，规范正文和检查清单位于以下位置：
 
-## 目标
+- [Rust skill](../../rust-standards/SKILL.md)
+- [Rust code standards](../../rust-standards/references/code-standards.md)
+- [Rust review checklist](../../rust-standards/references/review-checklist.md)
 
-- 平衡模块化、可读性、注释质量和工程可维护性。
-- 吸收 Rust 社区成熟实践，避免机械拆分和形式主义注释。
-
-## 1. 模块化
-
-- 单个模块只承担一个清晰职责；数据结构、相关 `impl`、紧耦合辅助逻辑优先放在同一模块。
-- 默认模块深度不超过 3 层。超过时需要有明确的架构理由，并在顶层说明。
-- 优先按领域边界拆分，不按 `types`、`traits`、`helpers` 这类技术分类机械拆分。
-- 文件建议控制在 150 到 300 行；超过 400 行时默认评估职责拆分；超过 600 行通常应主动拆分。
-- 函数建议控制在 20 到 60 行；超过 80 行时先检查是否存在独立逻辑块或重复代码可提炼。
-- 不要为了追求短文件、短函数而制造无意义转发层。
-
-## 2. 可读性与注释
-
-- 命名以业务语义优先，避免缩写和过度抽象化命名。
-- 优先早返回、`let else`、`match` 和浅层控制流，避免深层嵌套。
-- crate 根和关键模块使用 `//!` 写职责说明、边界说明和使用入口。
-- 公共类型、函数、trait、宏都使用 `///`，至少说明摘要、参数/返回值、错误、panic；必要时补示例。
-- 对以下内容必须写注释：`unsafe`、并发共享状态、锁顺序、所有权关键边界、性能取舍、顺序依赖、缓存策略。
-- 私有代码注释重点说明“为什么”，不要复述显而易见的“做了什么”。
-- 容易引发设计争议的点需要留下注释，例如为何 clone、为何保留具体类型而不是抽 trait。
-
-## 3. 其他关键规则
-
-- 默认收缩可见性，避免不必要的 `pub`。
-- trait 和泛型只在扩展点真实存在时引入，不为未来想象需求预抽象。
-- library 层优先结构化错误；编排层可在边界使用聚合错误。
-- 生产路径避免 `unwrap`/`expect`；若依赖不变量，错误信息必须说明原因。
-- 默认禁止 `unsafe`；若必须使用，收缩边界并写 `Safety` 文档。
-- 新增行为、边界条件、错误路径和 bug fix 必须补测试。
-- 提交前执行 `cargo fmt`、`cargo clippy --all-targets --all-features -D warnings` 与相关测试。
-- 新增依赖优先考虑标准库、成熟 crate 和较小依赖面，避免不必要的宏和重量级运行时绑定。
-
-## 待确认的可选加严项
-
-- 是否默认要求 `#![forbid(unsafe_code)]` 或仅建议默认避免 `unsafe`。
-- 是否对 `clippy` 采用零 warning 策略，还是允许少量带说明的例外。
-- 是否补充更细粒度的 async、FFI、workspace crate 拆分规则。
+保留本文件仅用于兼容旧路径引用；新的 Rust 规范维护应直接在 `rust-standards/` 目录下进行。

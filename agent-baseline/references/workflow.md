@@ -13,15 +13,16 @@
 ## 标准执行顺序
 
 1. 确认 `.agent` 目录与五个子目录存在。
-2. 若原始需求尚未在仓库内落档，创建 `req/req-{YMDHMin}-{topic}.md`。
-3. 若需要沉淀分析或答复，创建 `res/res-{YMDHMin}-{question}.md`。
-4. 创建或更新 `todo/task-{YMDHMin}.md`，并明确场景、开发目标、预期结果、验证方式。
-5. 在 `.agent/tests/results.db` 中先插入测试记录，再使用生成的 `id` 创建测试文档 `tests/{scene}-{YMDHMin}-{target}-{id}.md`。
-6. 按开发目标实现代码，并同步补齐或创建对应测试用例。
-7. 执行验证。单个用例必须给出布尔结果：`true` 表示通过，`false` 表示失败。
-8. 若验证失败，递增 `results.db` 中对应记录的 `fails` 字段，继续修复后再次验证。
-9. 若验证通过，写入 `passed_time`，并记录 `logs/log-{YMDHMin}.md`。
-10. 检查 git 状态并默认执行提交；提交信息标题概括任务，正文使用要点列出核心改动点，可参考 [commit template](../assets/commit-template.md)。
+2. 若当前任务存在语言专项规范，优先加载。Rust 使用 [rust-standards](../../rust-standards/SKILL.md) 和用户级 `rust.instructions.md`。
+3. 若原始需求尚未在仓库内落档，创建 `req/req-{YMDHMin}-{topic}.md`。
+4. 若需要沉淀分析或答复，创建 `res/res-{YMDHMin}-{question}.md`。
+5. 创建或更新 `todo/task-{YMDHMin}.md`，并明确场景、开发目标、预期结果、验证方式。
+6. 在 `.agent/tests/results.db` 中先插入测试记录，再使用生成的 `id` 创建测试文档 `tests/{scene}-{YMDHMin}-{target}-{id}.md`。
+7. 按开发目标实现代码，并同步补齐或创建对应测试用例。
+8. 执行验证。单个用例必须给出布尔结果：`true` 表示通过，`false` 表示失败。
+9. 若验证失败，递增 `results.db` 中对应记录的 `fails` 字段，继续修复后再次验证。
+10. 若验证通过，写入 `passed_time`，并记录 `logs/log-{YMDHMin}.md`。
+11. 检查 git 状态并默认执行提交；提交信息标题概括任务，正文使用要点列出核心改动点，可参考 [commit template](../assets/commit-template.md)。
 
 ## 约束
 
