@@ -1,0 +1,4 @@
+interface:
+  display_name: "App Naming"
+  short_description: "Create durable app and product names."
+  default_prompt: "Use $app-naming to name this app with a concise brand brief and a short, ranked candidate list."
