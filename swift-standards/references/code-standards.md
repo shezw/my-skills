@@ -1,104 +1,150 @@
 # Swift Code Standards
 
-This document defines a mature engineering baseline for Swift apps, Swift packages, frameworks, and Apple-platform features. Default to Swift 6 language mode for new work when dependencies allow it; for older codebases, use strict concurrency checking as a migration target and avoid adding new concurrency debt.
+This document is normative. Words such as must, required, prohibited, and not complete define acceptance criteria for Codex work. Existing project conventions may override these rules only when they are coherent, actively used, and do not violate the five core goals.
 
-## Goals
+## Core Goals
 
-- Keep module boundaries clear, state flow understandable, and behavior verifiable.
-- Prefer Swift and Apple-platform practices that are boring, safe, and maintainable: structured concurrency, small public API surfaces, explicit errors, doc comments on public APIs, automated formatting, and focused tests.
-- Separate UI, domain logic, networking, persistence, dependency wiring, and concurrency isolation so each layer can evolve without hidden coupling.
+Swift work must satisfy these goals:
 
-## Default Baseline
+1. Project structure is navigable.
+2. Responsibility boundaries are clear.
+3. State and concurrency are safe.
+4. Code quality is verifiable.
+5. Agent execution has a delivery loop.
 
-- Use Swift Package Manager by default for packages and third-party dependencies.
-- Prefer SwiftUI for new Apple-platform UI unless UIKit/AppKit is clearly better for the target, existing codebase, or required control.
-- Keep module depth to three meaningful levels by default; deeper structures need a clear domain, platform, or build reason.
-- Preserve existing project conventions when they are coherent and actively used.
+## 1. Project Structure Is Navigable
 
-## Project Layout And Module Boundaries
+### Required Outcome
 
-- Prefer feature-first or domain-first layout over global buckets such as `Views`, `Models`, `Services`, and `Helpers`.
-- Keep `App`, `Scene`, app delegate, and package entry points thin; they should compose dependencies, lifecycle, routing, and top-level configuration.
-- Split a Swift package or framework only for real release, reuse, compile-time, platform, or ownership boundaries.
-- Put tightly related view, state, use-case, client, and model code inside the same feature boundary until reuse or ownership pressure justifies promotion.
-- Avoid empty protocols, facade layers, pure forwarding files, and directory nesting that only exists to look architectural.
+Anyone opening the project must be able to determine where entry points, features, shared code, infrastructure, resources, and tests live without reading every file.
 
-## File Size And Split Heuristics
+### Rules
 
-- Keep Swift files around 150 to 300 lines when practical; review files over 400 lines for mixed responsibilities.
-- Review SwiftUI view files over 220 lines for extracted subviews, view state, formatters, or interaction handlers.
-- Keep functions around 20 to 60 lines when practical; review functions over 80 lines for multiple decision blocks.
-- Do not extract one-line helpers or single-use abstractions when they make the call site less clear.
+- The project must have a deliberate directory structure that reflects feature, domain, platform, or module responsibility.
+- App, scene, delegate, package, or framework entry points must be isolated from feature implementation.
+- Feature code must be grouped by product capability or domain unless the project has a stronger documented architecture.
+- Shared code must live behind a clear boundary and must not become a dumping ground.
+- Infrastructure code such as networking, persistence, system integrations, analytics, logging, and dependency wiring must be identifiable.
+- Resources and tests must be separated from production logic.
+- A file's location must communicate its responsibility. File naming alone is not enough.
 
-## Readability And Naming
+### Non-Compliant
 
-- Use `PascalCase` for types and `camelCase` for variables, functions, enum cases, and properties.
-- Prefer domain language over vague names like `data`, `item`, `manager`, `helper`, `util`, or `processor`.
-- Use `guard`, early returns, small local scopes, and exhaustive `switch` statements to keep the happy path clear.
-- Make public APIs feel native to Swift rather than mirroring backend fields, JSON names, or Objective-C style.
-- Use custom operators, property wrappers, result builders, and macros only when they materially improve call-site clarity.
+- The project structure does not reveal business or module boundaries.
+- New files are added to an already ambiguous location without improving the structure.
+- Feature, shared, infrastructure, resource, and test files are mixed without a clear reason.
+- App entry files contain substantial feature behavior.
+- A refactor or standardization task leaves obvious structure violations untouched without reporting them as out of scope.
 
-## SwiftUI And UI State
+## 2. Responsibility Boundaries Are Clear
 
-- Keep SwiftUI `View` types declarative. Move heavy branching, formatting, IO, and domain decisions into state, use cases, or model layers.
-- Use `@State` for local UI state only; use observable models, environment values, or explicit dependency injection for broader state.
-- Do not start network requests, write databases, or perform expensive work directly in `body`.
-- Represent loading, empty, error, permission, offline, and refreshing states explicitly.
-- Add previews or preview fixtures for key states, not only the happy path.
+### Required Outcome
 
-## UIKit And AppKit
+UI, state coordination, business rules, system capabilities, external services, and app composition must have separate responsibilities.
 
-- Keep view controllers and coordinators focused on lifecycle, binding, navigation, and platform integration.
-- Move business logic out of view controllers into use cases, models, reducers, or services with testable boundaries.
-- Keep imperative UI updates centralized and predictable; avoid scattering state mutation across delegate callbacks.
-- Bridge SwiftUI and UIKit/AppKit through small adapters with clear ownership and lifecycle rules.
+### Rules
 
-## Concurrency And Data-Race Safety
+- Views must express UI and user interactions. They must not own networking, persistence, complex business rules, or long-running orchestration.
+- State, view models, controllers, reducers, or coordinators must handle UI state transitions and user intent coordination.
+- Models and domain types must represent business concepts, invariants, and rules.
+- Services, clients, repositories, and gateways must wrap networking, storage, system APIs, and external dependencies.
+- App and scene entry points must handle startup, dependency composition, routing, lifecycle, and global configuration only.
+- A type must have one primary responsibility. If it spans multiple layers, split it or explicitly document why it is a boundary object.
 
-- Prefer `async`/`await`, structured tasks, actors, and immutable values over callback chains and shared mutable state.
-- Mark UI-facing models, controllers, and mutation points with `@MainActor` when their state is main-thread bound.
-- Make values crossing concurrency boundaries `Sendable` where appropriate; document any unchecked sendability.
-- Avoid global mutable singletons. If shared state is necessary, isolate it behind an actor, serial executor, lock wrapper, or clearly documented main-actor boundary.
-- Use unstructured `Task`, `Task.detached`, locks, caches, manual cancellation, and retry loops only with an explicit reason and nearby comment.
+### Non-Compliant
 
-## API, Protocols, And Abstraction
+- UI directly performs network, database, analytics, or complex domain decisions.
+- Services depend on UI types or user-interface copy.
+- Controllers, views, or view models become catch-all objects.
+- Models are just untyped transport bags when domain rules are present.
+- A refactor only changes style while leaving mixed responsibilities in place.
 
-- Keep `public` and `open` API surfaces minimal. Prefer `internal`, `fileprivate`, or `private` until a stable boundary exists.
-- Introduce protocols only for multiple implementations, platform variation, extension points, or stable test seams.
-- Prefer concrete implementation first; extract protocols, generics, or builders after variation becomes real.
-- Use value types for domain values where practical, and create explicit domain types instead of passing bare `String`, `Int`, or `UUID` across important boundaries.
-- Use configuration structs for complex construction rather than long initializer parameter lists.
+## 3. State And Concurrency Are Safe
 
-## Error Handling
+### Required Outcome
 
-- Return structured `Error` values for recoverable failures.
-- Map lower-level errors to user-facing state at app boundaries; do not couple domain or client modules to UI copy.
-- Avoid force unwraps and force tries in production paths. If an invariant truly makes them safe, make the failure message specific.
-- Cover networking, parsing, storage, permission, cancellation, timeout, and migration errors in tests where behavior matters.
+UI state, asynchronous work, shared data, cancellation, and error states must be explicit and testable.
 
-## Documentation And Comments
+### Rules
 
-- Document all `public` and `open` types, functions, protocols, and properties.
-- Use module or type documentation to explain responsibility, ownership, thread/actor expectations, and important limits.
-- Explain why for non-obvious concurrency isolation, locks, caches, performance tradeoffs, compatibility workarounds, dependency choices, and unchecked `Sendable`.
-- Do not use comments to repeat code that is already clear; prefer better names and smaller scopes.
+- UI-bound state mutations must have an explicit main-thread or `MainActor` boundary.
+- New asynchronous code must prefer `async`/`await` and structured concurrency over unbounded callbacks.
+- Values crossing concurrency boundaries must be `Sendable` when applicable, or have documented isolation.
+- Shared mutable state must be isolated by an actor, main actor, lock, serial queue, or another explicit mechanism.
+- Loading, empty, error, permission, offline, refreshing, and cancellation states must be modeled explicitly when they affect behavior or UI.
+- `Task.detached`, unstructured `Task`, locks, caches, manual retries, and manual cancellation must have a specific reason.
 
-## Testing And Tooling
+### Non-Compliant
 
-- Add tests for new behavior, edge cases, error paths, concurrency fixes, migrations, and bug fixes.
-- Keep domain logic testable without UI frameworks or live services.
-- Use XCTest or Swift Testing according to the project baseline; use XCUITest for critical user flows when UI behavior is the subject.
-- Run formatting, linting, relevant tests, and a target build before finishing non-trivial changes.
-- Prefer swift-format or the project's existing formatter; SwiftLint is useful when configured to reinforce readability rather than ceremony.
+- Code relies on implicit thread assumptions.
+- Shared mutable state has no isolation boundary.
+- Async work cannot be cancelled or reasoned about where cancellation matters.
+- Error and loading states are scattered across unrelated booleans without a clear state model.
+- `try?`, force unwraps, or silent failure hide meaningful runtime behavior.
 
-## Dependencies
+## 4. Code Quality Is Verifiable
 
-- Prefer the standard library, Apple frameworks, and small, actively maintained packages with stable APIs.
-- Avoid multiple libraries for the same foundation capability, such as networking, dependency injection, image loading, persistence, or reactive state.
-- When adding a dependency, record the problem solved, alternatives considered, platform impact, maintenance state, and binary or compile-time cost when relevant.
+### Required Outcome
 
-## Pending Project Decisions
+Every implementation, refactor, or standardization must leave evidence that behavior and structure were checked.
 
-- Whether Swift 6 language mode is a hard requirement or a migration target for legacy code.
-- Whether SwiftUI is the default UI layer for all new surfaces or only for greenfield features.
-- Whether the team standardizes on swift-format, SwiftLint, both, or existing Xcode formatting only.
+### Rules
+
+- New behavior, bug fixes, edge cases, error paths, migrations, and concurrency fixes must have tests or a stated reason why tests cannot be added.
+- Public and open APIs must have documentation comments explaining responsibility, inputs, outputs, errors, actor or thread expectations, and important limits.
+- Non-obvious decisions must explain why, especially for concurrency isolation, caches, locks, compatibility workarounds, dependency choices, performance tradeoffs, and unchecked sendability.
+- Relevant build, test, format, and lint commands must run before completion when available.
+- If verification cannot run, Codex must report the blocker and the residual risk.
+
+### Non-Compliant
+
+- No verification result is reported.
+- No tests are added for behavior changes and no reason is given.
+- Public boundaries lack documentation.
+- The change cannot be mapped to a concrete quality goal.
+- Formatting, comments, or renames are presented as standardization while structural or responsibility violations remain in scope.
+
+## 5. Agent Execution Has A Delivery Loop
+
+### Required Outcome
+
+When Codex uses this standard, the work must follow an inspect, decide, change, verify, report loop.
+
+### Rules
+
+- Codex must inspect the current structure and relevant Swift files before editing.
+- Codex must identify which core goals are violated or explicitly confirm they are satisfied.
+- Codex must define the target organization before broad file movement or architectural refactor.
+- Codex must implement the structural and responsibility changes needed by the request.
+- Codex must report file movement, responsibility changes, key code changes, verification commands, and remaining non-compliance.
+
+### Non-Compliant
+
+- Codex starts editing without understanding the structure.
+- Codex only changes local code style when the request is architectural or standardization-oriented.
+- Codex gives no before/after structure summary.
+- Codex does not explain why the resulting organization satisfies the standard.
+- Codex gives no verification result or residual-risk statement.
+
+## Swift-Specific Rules
+
+### SwiftUI
+
+- SwiftUI `View` types must remain declarative.
+- Heavy branching, formatting, IO, network calls, persistence, and domain decisions must move out of `body`.
+- `@State` must be local UI state only. Broader state must use a clear observable model, environment value, dependency, or feature state object.
+- Key UI states must be represented as explicit enum cases or equivalent structured state when boolean combinations become ambiguous.
+
+### UIKit And AppKit
+
+- View controllers must focus on lifecycle, binding, navigation, and platform integration.
+- Business logic must live outside view controllers.
+- Delegate callbacks must route to clear state or service boundaries instead of scattering mutation.
+- SwiftUI and UIKit/AppKit bridges must be small adapters with clear ownership and lifecycle.
+
+### API And Dependencies
+
+- `public` and `open` surfaces must be minimal and documented.
+- Protocols must exist for real variation, platform differences, extension points, or test seams. Empty speculative protocols are prohibited.
+- New dependencies must have a clear reason and must not duplicate an existing foundation capability.
+- Prefer Swift Package Manager unless the project has an existing enforced dependency system.

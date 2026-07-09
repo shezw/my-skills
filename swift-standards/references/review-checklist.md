@@ -1,49 +1,53 @@
 # Swift Review Checklist
 
-## Structure
+Use this checklist as an acceptance gate. A Swift standardization, refactor, or review is not complete until every in-scope item is either satisfied or explicitly reported as remaining work.
 
-- Is the code organized by feature or domain boundary rather than broad technical buckets?
-- Are app, scene, delegate, and package entry points thin?
-- Is each package, framework, or module split justified by reuse, release, platform, ownership, or build isolation?
-- Are there empty protocols, facades, pure forwarding files, or directories that add navigation cost without clarity?
+## 1. Project Structure Is Navigable
 
-## UI And State
+- Does the directory structure reveal entry points, features, shared code, infrastructure, resources, and tests?
+- Are feature, domain, platform, or module boundaries visible from file locations?
+- Are app, scene, delegate, package, and framework entry points thin?
+- Are new or moved files placed where their responsibility is clear?
+- Has Codex reported any structure violations that remain out of scope?
 
-- Are SwiftUI views declarative and free of heavy IO, business logic, and expensive work in `body`?
-- Are loading, empty, error, permission, offline, and refreshing states explicit?
-- Is state kept close to its owner, with broader state passed through clear observable models or dependencies?
-- Are key UI states covered by previews, fixtures, unit tests, or UI tests where appropriate?
+## 2. Responsibility Boundaries Are Clear
 
-## Concurrency
+- Are UI, state coordination, domain rules, services, clients, resources, and tests separated?
+- Are views free of networking, persistence, complex business rules, and long-running orchestration?
+- Are controllers, view models, reducers, or coordinators focused on state transitions and user intent?
+- Are services and clients free of UI dependencies?
+- Does every major type have one primary responsibility?
 
-- Are UI-bound mutations isolated to `MainActor` or another explicit boundary?
-- Are cross-task values `Sendable` where appropriate, with any unchecked cases documented?
-- Are unstructured `Task`, `Task.detached`, locks, caches, cancellation, timeout, and retry logic justified and easy to reason about?
-- Is global mutable state avoided or isolated behind an actor, lock, or documented main-actor boundary?
+## 3. State And Concurrency Are Safe
 
-## API And Errors
+- Are UI-bound mutations isolated to `MainActor`, main thread, or another explicit boundary?
+- Are async operations structured, cancellable where needed, and not hidden behind uncontrolled callbacks?
+- Are shared mutable states isolated by actor, lock, queue, main actor, or equivalent?
+- Are loading, empty, error, permission, offline, refreshing, and cancellation states explicit where they matter?
+- Are `Task.detached`, unstructured tasks, unchecked sendability, caches, locks, retries, and timeouts justified?
 
-- Is the `public` or `open` surface minimal and documented?
-- Are protocols, generics, property wrappers, macros, and builders used for real variation rather than speculative abstraction?
-- Are recoverable failures represented as structured errors and mapped to user-facing state at the right boundary?
-- Are force unwraps, force tries, and silent error swallowing avoided in production paths?
+## 4. Code Quality Is Verifiable
 
-## Documentation And Dependencies
+- Are new behavior, bug fixes, edge cases, error paths, migrations, and concurrency fixes tested or explicitly marked untestable with a reason?
+- Are public/open APIs documented?
+- Do comments explain non-obvious decisions instead of restating code?
+- Did Codex run relevant build, test, format, and lint commands?
+- If verification could not run, is the blocker and residual risk reported?
 
-- Do public APIs explain responsibility, parameters, return values, errors, actor/thread expectations, and important limits?
-- Do comments explain why for concurrency, caches, locks, compatibility workarounds, and performance tradeoffs?
-- Are new dependencies necessary, maintained, platform-compatible, and not duplicating an existing foundation library?
-- Is any dependency cost or architectural impact noted when relevant?
+## 5. Agent Execution Has A Delivery Loop
 
-## Verification
+- Did Codex inspect the current structure before editing?
+- Did Codex identify which core goals were violated?
+- Did Codex define or confirm the target organization?
+- Did Codex implement the required structural and responsibility changes rather than only local style edits?
+- Did Codex report file movement, responsibility changes, key code changes, verification results, and remaining non-compliance?
 
-- Are new behavior, edge cases, error paths, migrations, concurrency fixes, and bug fixes covered by tests?
-- Can domain logic be tested without UI frameworks or live services?
-- Has the relevant target or scheme been built?
-- Have formatting, linting, and related tests been run or explicitly deferred with a reason?
+## Hard Failure Conditions
 
-## Confirm With Project Owner
+Any of these means the task is not complete:
 
-- Is Swift 6 language mode mandatory, or is strict concurrency a migration target for now?
-- Is SwiftUI the default for new UI, or should UIKit/AppKit remain primary for this project?
-- Should the project standardize on swift-format, SwiftLint, both, or existing local tooling?
+- No project structure inspection occurred.
+- No target organization was defined or confirmed for an architectural or standardization task.
+- Structural or responsibility violations remain in scope but are ignored.
+- Verification results are absent.
+- The final report does not explain what changed and why it satisfies the standard.

@@ -1,56 +1,50 @@
 # Swift Stack Defaults
 
-Use these defaults for greenfield Swift work or when an existing project has no clear convention. Existing coherent project choices take priority.
+These defaults are mandatory when a project has no stronger local convention. Existing coherent project choices take priority only when they still satisfy the five core goals.
+
+## Project Shape
+
+- New app work must separate entry points, features, shared code, infrastructure, resources, and tests.
+- New package work must separate public API, internal implementation, tests, and resources.
+- Feature code must be grouped by product capability or domain.
+- Shared code must be promoted only after at least two real consumers or a clear platform boundary exists.
 
 ## Language And Toolchain
 
-- Prefer Swift 6 language mode for new projects when dependencies allow it.
-- For legacy projects, enable strict concurrency checking as early as practical and avoid adding new unchecked concurrency debt.
-- Use Swift Package Manager for packages and third-party dependencies by default.
-- Keep deployment targets aligned with the product's actual support policy; do not raise them only for convenience without owner approval.
+- New projects must target Swift 6 language mode when dependency constraints allow it.
+- Legacy projects must avoid adding new strict-concurrency violations.
+- Swift Package Manager is the default dependency system.
+- Deployment target increases require product or owner approval.
 
 ## UI
 
-- Prefer SwiftUI for new iOS, macOS, watchOS, visionOS, and multiplatform screens when it covers the required interaction and performance.
-- Use UIKit/AppKit for complex existing surfaces, advanced platform controls, mature custom components, or cases where SwiftUI introduces avoidable risk.
-- Use small adapter layers when bridging SwiftUI with UIKit/AppKit.
-- Keep design-system primitives centralized rather than hard-coding colors, typography, spacing, and animation values across features.
+- SwiftUI is the default for new UI when it supports the required interaction, performance, and platform behavior.
+- UIKit/AppKit remains valid for existing surfaces, advanced platform controls, mature custom components, or risk reduction.
+- Bridges between SwiftUI and UIKit/AppKit must be small and explicit.
+- Design tokens such as colors, typography, spacing, and animation values must be centralized.
 
 ## State And Architecture
 
-- Start with simple local state and explicit dependencies before introducing a framework.
-- Use observable models, use cases, clients, and repositories only where they clarify ownership or testability.
-- Avoid defaulting to global service locators. Prefer initializer injection, environment values, or a small composition root.
-- Introduce reducer-style architectures only when complex state transitions, testability needs, or team consistency justify them.
+- Start with explicit local state and dependencies.
+- Add observable models, use cases, clients, repositories, coordinators, or reducers only when they clarify ownership, testability, or state transitions.
+- Global service locators are prohibited unless the project already standardizes on one and its boundary is documented.
+- Dependency injection must be explicit through initializers, environment values, composition roots, or a documented project mechanism.
 
 ## Networking
 
-- Prefer `URLSession` and `async`/`await` unless the project has a mature networking layer.
-- Keep request construction, response decoding, authentication, retry policy, and error mapping in client modules rather than UI code.
-- Model API responses separately from domain models when the external schema is unstable or poorly aligned with product language.
+- Use `URLSession` with `async`/`await` unless the project already has a mature networking layer.
+- Request construction, decoding, authentication, retries, and error mapping must live outside UI code.
+- External API DTOs must be separated from domain models when schemas do not match product language or stability needs.
 
 ## Persistence
 
-- Use lightweight persistence for lightweight needs: `UserDefaults`, app storage, keychain, files, or SQLite wrappers as appropriate.
-- Use SwiftData or Core Data when object graph management, relationships, migrations, or platform integration justify the cost.
-- Keep persistence models from leaking into UI and domain boundaries unless the project intentionally uses them as domain models.
+- Use the smallest persistence mechanism that satisfies product needs.
+- Use SwiftData or Core Data only when relationships, migrations, object graph management, or platform integration justify the cost.
+- Persistence models must not leak into UI or domain boundaries unless the project intentionally uses them as domain models.
 
-## Async Streams And Reactive Code
+## Testing And Quality Gates
 
-- Prefer Swift Concurrency for new asynchronous flows.
-- Use Combine when maintaining existing Combine code, integrating with Apple APIs, or when its operators materially simplify a stream.
-- Avoid mixing Combine, callbacks, and async/await inside one feature without a clear boundary.
-
-## Testing
-
-- Use XCTest unless the project has adopted Swift Testing as its standard.
-- Use XCUITest for critical user flows and accessibility-sensitive interactions.
-- Use fakes or local test doubles for clients and persistence boundaries; avoid live network or production service dependencies in normal tests.
-- Keep snapshot testing optional and targeted at visual regression risk, not as a replacement for behavior tests.
-
-## Quality Gates
-
-- Run formatting and linting according to the project standard.
-- Build the relevant target or scheme after non-trivial code changes.
-- Run related unit tests for logic changes and UI tests for user-flow changes when available.
-- Treat concurrency warnings, force unwraps in production paths, and broad `try?` swallowing as review triggers.
+- XCTest or Swift Testing must cover meaningful domain behavior.
+- XCUITest must cover critical flows when UI behavior is the change.
+- Normal tests must not depend on live production services.
+- Non-trivial changes must build the relevant target or scheme and run related tests when the toolchain is available.
