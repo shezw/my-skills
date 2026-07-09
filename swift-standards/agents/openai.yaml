@@ -1,0 +1,4 @@
+interface:
+  display_name: "Swift Standards"
+  short_description: "Swift app and package engineering standards"
+  default_prompt: "Use $swift-standards to design or review a Swift feature, package, or Apple-platform module."
