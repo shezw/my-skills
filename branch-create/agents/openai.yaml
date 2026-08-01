@@ -1,0 +1,4 @@
+interface:
+  display_name: "Branch Create"
+  short_description: "Apply conservative branch-creation rules."
+  default_prompt: "Use $branch-create to decide whether a branch is warranted and name it."
